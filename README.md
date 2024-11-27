@@ -1,4 +1,68 @@
-# Welcome to your Lovable project
+# Reddit Hacker Trendster 📰
+
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0.0-blue.svg)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0-38B2AC.svg)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+A HackerNews-style interface for browsing Reddit trends, built with React and TypeScript.
+
+## Features 🚀
+
+- Clean, minimalist interface inspired by HackerNews
+- Real-time Reddit trends from r/all
+- Upvote functionality
+- Time-ago display for posts
+- Responsive design
+
+## Tech Stack 💻
+
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Tanstack Query](https://tanstack.com/query/latest)
+
+## Getting Started 🏁
+
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+4. Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## Project Structure 📁
+
+```
+src/
+├── components/     # React components
+├── pages/         # Page components
+├── lib/           # Utility functions
+└── main.tsx       # Application entry point
+```
+
+## Contributing 🤝
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License 📝
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Project info
 
@@ -52,7 +116,7 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with .
+This project is built with:
 
 - Vite
 - TypeScript

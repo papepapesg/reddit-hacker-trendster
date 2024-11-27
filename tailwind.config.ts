@@ -19,6 +19,12 @@ export default {
     },
     extend: {
       colors: {
+        hn: {
+          orange: "#FF6600",
+          background: "#F6F6EF",
+          text: "#000000",
+          secondary: "#828282",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -52,6 +58,9 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+      },
+      fontFamily: {
+        sans: ["Verdana", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

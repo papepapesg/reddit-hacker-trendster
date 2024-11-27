@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { RedditPost } from "@/components/RedditPost";
 import { RefreshConfig, type RefreshInterval } from "@/components/RefreshConfig";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface RedditPost {
@@ -19,22 +19,33 @@ const Index = () => {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(300000);
   const [nextUpdate, setNextUpdate] = useState<number>(refreshInterval);
   const { toast } = useToast();
+  const observerTarget = useRef<HTMLDivElement>(null);
 
-  const { data: posts, isLoading, dataUpdatedAt } = useQuery({
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    dataUpdatedAt
+  } = useInfiniteQuery({
     queryKey: ["redditTrends"],
-    queryFn: async () => {
-      console.log("Fetching Reddit trends...");
+    queryFn: async ({ pageParam = "" }) => {
+      console.log("Fetching Reddit trends, after:", pageParam);
       const response = await fetch(
-        "https://www.reddit.com/r/all/top.json?limit=30&t=day"
+        `https://www.reddit.com/r/all/top.json?limit=30&t=day&after=${pageParam}`
       );
       const data = await response.json();
       console.log("Fetched posts:", data.data.children);
-      toast({
-        title: "Data Updated",
-        description: "Reddit trends have been refreshed",
-      });
-      return data.data.children;
+      if (pageParam === "") {
+        toast({
+          title: "Data Updated",
+          description: "Reddit trends have been refreshed",
+        });
+      }
+      return data.data;
     },
+    getNextPageParam: (lastPage) => lastPage.after || undefined,
     refetchInterval: refreshInterval,
   });
 
@@ -46,6 +57,31 @@ const Index = () => {
 
     return () => clearInterval(timer);
   }, [refreshInterval, dataUpdatedAt]);
+
+  const onIntersect = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const target = entries[0];
+      if (target.isIntersecting && !isFetchingNextPage && hasNextPage) {
+        console.log("Loading more posts...");
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(onIntersect, {
+      root: null,
+      rootMargin: "0px",
+      threshold: 1.0,
+    });
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [onIntersect]);
 
   const formatTimeAgo = (timestamp: number) => {
     const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
@@ -75,6 +111,8 @@ const Index = () => {
       : `${seconds}s`;
   };
 
+  const allPosts = data?.pages.flatMap((page) => page.children) ?? [];
+
   return (
     <div className="min-h-screen bg-hn-background">
       <header className="bg-hn-orange p-2">
@@ -90,19 +128,31 @@ const Index = () => {
         {isLoading ? (
           <div className="text-center py-8">Loading trends...</div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {posts?.map((post: RedditPost) => (
-              <RedditPost
-                key={post.data.url}
-                title={post.data.title}
-                url={post.data.url}
-                score={post.data.score}
-                author={post.data.author}
-                createdAt={formatTimeAgo(post.data.created_utc)}
-                commentsCount={post.data.num_comments}
-              />
-            ))}
-          </div>
+          <>
+            <div className="divide-y divide-gray-200">
+              {allPosts.map((post: RedditPost) => (
+                <RedditPost
+                  key={post.data.url}
+                  title={post.data.title}
+                  url={post.data.url}
+                  score={post.data.score}
+                  author={post.data.author}
+                  createdAt={formatTimeAgo(post.data.created_utc)}
+                  commentsCount={post.data.num_comments}
+                />
+              ))}
+            </div>
+            <div
+              ref={observerTarget}
+              className="py-4 text-center text-hn-secondary"
+            >
+              {isFetchingNextPage
+                ? "Loading more..."
+                : hasNextPage
+                ? "Scroll for more"
+                : "No more posts"}
+            </div>
+          </>
         )}
       </main>
 

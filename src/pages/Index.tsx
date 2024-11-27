@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { RedditPost } from "@/components/RedditPost";
 import { RefreshConfig, type RefreshInterval } from "@/components/RefreshConfig";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface RedditPost {
   data: {
@@ -16,8 +17,10 @@ interface RedditPost {
 
 const Index = () => {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(300000);
+  const [nextUpdate, setNextUpdate] = useState<number>(refreshInterval);
+  const { toast } = useToast();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading, dataUpdatedAt } = useQuery({
     queryKey: ["redditTrends"],
     queryFn: async () => {
       console.log("Fetching Reddit trends...");
@@ -26,10 +29,23 @@ const Index = () => {
       );
       const data = await response.json();
       console.log("Fetched posts:", data.data.children);
+      toast({
+        title: "Data Updated",
+        description: "Reddit trends have been refreshed",
+      });
       return data.data.children;
     },
     refetchInterval: refreshInterval,
   });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const timeLeft = Math.max(0, refreshInterval - (Date.now() - dataUpdatedAt));
+      setNextUpdate(timeLeft);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [refreshInterval, dataUpdatedAt]);
 
   const formatTimeAgo = (timestamp: number) => {
     const seconds = Math.floor((Date.now() - timestamp * 1000) / 1000);
@@ -51,11 +67,22 @@ const Index = () => {
     return "just now";
   };
 
+  const formatNextUpdate = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    return minutes > 0 
+      ? `${minutes}m ${seconds % 60}s`
+      : `${seconds}s`;
+  };
+
   return (
     <div className="min-h-screen bg-hn-background">
       <header className="bg-hn-orange p-2">
-        <div className="container max-w-5xl">
+        <div className="container max-w-5xl flex justify-between items-center">
           <h1 className="text-white font-bold">Reddit Trends</h1>
+          <div className="text-white text-sm">
+            Next update in: {formatNextUpdate(nextUpdate)}
+          </div>
         </div>
       </header>
 

@@ -34,7 +34,8 @@ const Index = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    dataUpdatedAt
+    dataUpdatedAt,
+    refetch
   } = useInfiniteQuery<RedditApiResponse>({
     queryKey: ["redditTrends"],
     queryFn: async ({ pageParam }) => {
@@ -49,6 +50,8 @@ const Index = () => {
           title: "Data Updated",
           description: "Reddit trends have been refreshed",
         });
+        // Scroll to top when data is refreshed
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
       return data;
     },
@@ -61,10 +64,13 @@ const Index = () => {
     const timer = setInterval(() => {
       const timeLeft = Math.max(0, refreshInterval - (Date.now() - dataUpdatedAt));
       setNextUpdate(timeLeft);
+      if (timeLeft === 0) {
+        refetch(); // Force a refresh when the timer hits 0
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [refreshInterval, dataUpdatedAt]);
+  }, [refreshInterval, dataUpdatedAt, refetch]);
 
   const onIntersect = useCallback(
     (entries: IntersectionObserverEntry[]) => {

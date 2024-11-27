@@ -4,6 +4,7 @@ import { RefreshConfig, type RefreshInterval } from "@/components/RefreshConfig"
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { StoryDrawer } from "@/components/StoryDrawer";
+import { SortControl } from "@/components/SortControl";
 
 interface RedditPost {
   data: {
@@ -28,6 +29,7 @@ const Index = () => {
   const [nextUpdate, setNextUpdate] = useState<number>(refreshInterval);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState<{ title: string; url: string } | null>(null);
+  const [sortBy, setSortBy] = useState<"date" | "comments">("date");
   const { toast } = useToast();
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -133,7 +135,22 @@ const Index = () => {
     setDrawerOpen(true);
   };
 
+  const handleSortChange = (value: string) => {
+    console.log("Sorting changed to:", value);
+    setSortBy(value as "date" | "comments");
+  };
+
+  const sortPosts = (posts: RedditPost[]) => {
+    return [...posts].sort((a, b) => {
+      if (sortBy === "date") {
+        return b.data.created_utc - a.data.created_utc;
+      }
+      return b.data.num_comments - a.data.num_comments;
+    });
+  };
+
   const allPosts = data?.pages.flatMap((page) => page.data.children) ?? [];
+  const sortedPosts = sortPosts(allPosts);
 
   return (
     <div className="min-h-screen bg-hn-background">
@@ -147,12 +164,16 @@ const Index = () => {
       </header>
 
       <main className="container max-w-5xl py-4">
+        <div className="mb-4">
+          <SortControl onSortChange={handleSortChange} />
+        </div>
+
         {isLoading ? (
           <div className="text-center py-8">Loading trends...</div>
         ) : (
           <>
             <div className="divide-y divide-gray-200">
-              {allPosts.map((post: RedditPost) => (
+              {sortedPosts.map((post: RedditPost) => (
                 <RedditPost
                   key={post.data.url}
                   title={post.data.title}

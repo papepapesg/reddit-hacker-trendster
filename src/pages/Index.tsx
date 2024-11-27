@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { RedditPost } from "@/components/RedditPost";
+import { RefreshConfig, type RefreshInterval } from "@/components/RefreshConfig";
+import { useState } from "react";
 
 interface RedditPost {
   data: {
@@ -13,6 +15,8 @@ interface RedditPost {
 }
 
 const Index = () => {
+  const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(300000);
+
   const { data: posts, isLoading } = useQuery({
     queryKey: ["redditTrends"],
     queryFn: async () => {
@@ -24,6 +28,7 @@ const Index = () => {
       console.log("Fetched posts:", data.data.children);
       return data.data.children;
     },
+    refetchInterval: refreshInterval,
   });
 
   const formatTimeAgo = (timestamp: number) => {
@@ -73,6 +78,8 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      <RefreshConfig onIntervalChange={setRefreshInterval} />
     </div>
   );
 };

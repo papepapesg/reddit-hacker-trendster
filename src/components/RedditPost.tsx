@@ -9,6 +9,7 @@ interface RedditPostProps {
   author: string;
   createdAt: string;
   commentsCount: number;
+  onOpenStory: (title: string, url: string) => void;
 }
 
 export const RedditPost = ({
@@ -18,6 +19,7 @@ export const RedditPost = ({
   author,
   createdAt,
   commentsCount,
+  onOpenStory,
 }: RedditPostProps) => {
   const [votes, setVotes] = useState(score);
   const [voted, setVoted] = useState(false);
@@ -29,6 +31,11 @@ export const RedditPost = ({
       toast.success("Vote recorded!");
       console.log("Vote recorded for post:", title);
     }
+  };
+
+  const handleTitleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onOpenStory(title, url);
   };
 
   return (
@@ -46,8 +53,7 @@ export const RedditPost = ({
         <div className="flex items-baseline gap-2">
           <a
             href={url}
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={handleTitleClick}
             className="text-sm font-medium hover:underline"
           >
             {title}

@@ -3,6 +3,7 @@ import { RedditPost } from "@/components/RedditPost";
 import { RefreshConfig, type RefreshInterval } from "@/components/RefreshConfig";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { StoryDrawer } from "@/components/StoryDrawer";
 
 interface RedditPost {
   data: {
@@ -25,6 +26,8 @@ interface RedditApiResponse {
 const Index = () => {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(300000);
   const [nextUpdate, setNextUpdate] = useState<number>(refreshInterval);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedStory, setSelectedStory] = useState<{ title: string; url: string } | null>(null);
   const { toast } = useToast();
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -125,6 +128,11 @@ const Index = () => {
       : `${seconds}s`;
   };
 
+  const handleOpenStory = (title: string, url: string) => {
+    setSelectedStory({ title, url });
+    setDrawerOpen(true);
+  };
+
   const allPosts = data?.pages.flatMap((page) => page.data.children) ?? [];
 
   return (
@@ -153,6 +161,7 @@ const Index = () => {
                   author={post.data.author}
                   createdAt={formatTimeAgo(post.data.created_utc)}
                   commentsCount={post.data.num_comments}
+                  onOpenStory={handleOpenStory}
                 />
               ))}
             </div>
@@ -171,6 +180,15 @@ const Index = () => {
       </main>
 
       <RefreshConfig onIntervalChange={setRefreshInterval} />
+      
+      {selectedStory && (
+        <StoryDrawer
+          open={drawerOpen}
+          onOpenChange={setDrawerOpen}
+          title={selectedStory.title}
+          url={selectedStory.url}
+        />
+      )}
     </div>
   );
 };

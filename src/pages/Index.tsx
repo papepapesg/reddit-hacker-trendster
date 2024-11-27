@@ -15,6 +15,13 @@ interface RedditPost {
   };
 }
 
+interface RedditApiResponse {
+  data: {
+    after: string | null;
+    children: RedditPost[];
+  };
+}
+
 const Index = () => {
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>(300000);
   const [nextUpdate, setNextUpdate] = useState<number>(refreshInterval);
@@ -28,9 +35,9 @@ const Index = () => {
     hasNextPage,
     isFetchingNextPage,
     dataUpdatedAt
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<RedditApiResponse>({
     queryKey: ["redditTrends"],
-    queryFn: async ({ pageParam = "" }) => {
+    queryFn: async ({ pageParam }) => {
       console.log("Fetching Reddit trends, after:", pageParam);
       const response = await fetch(
         `https://www.reddit.com/r/all/top.json?limit=30&t=day&after=${pageParam}`
@@ -43,9 +50,10 @@ const Index = () => {
           description: "Reddit trends have been refreshed",
         });
       }
-      return data.data;
+      return data;
     },
-    getNextPageParam: (lastPage) => lastPage.after || undefined,
+    initialPageParam: "",
+    getNextPageParam: (lastPage) => lastPage.data.after || undefined,
     refetchInterval: refreshInterval,
   });
 
@@ -111,7 +119,7 @@ const Index = () => {
       : `${seconds}s`;
   };
 
-  const allPosts = data?.pages.flatMap((page) => page.children) ?? [];
+  const allPosts = data?.pages.flatMap((page) => page.data.children) ?? [];
 
   return (
     <div className="min-h-screen bg-hn-background">
